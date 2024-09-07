@@ -1,317 +1,261 @@
-
 # NATS CLI Documentation
 
 ## Table of Contents
-- [Installation](#installation)
-- [Configuration](#configuration)
-  - [Adding Context](#adding-context)
-  - [Managing Multiple Connections](#managing-multiple-connections)
-- [Stream Management](#stream-management)
-  - [Creating a Stream](#creating-a-stream)
-  - [Viewing Stream Information](#viewing-stream-information)
-  - [Purging a Stream](#purging-a-stream)
-  - [Deleting a Stream](#deleting-a-stream)
-- [Message Management](#message-management)
-  - [Deleting a Specific Message](#deleting-a-specific-message)
-  - [Removing a Deleted Message](#removing-a-deleted-message)
-- [Helpful Commands](#helpful-commands)
+1. [Introduction](#introduction)
+2. [Installation](#installation)
+3. [Basic Commands](#basic-commands)
+4. [Managing Streams](#managing-streams)
+5. [Working with Contexts](#working-with-contexts)
+6. [Configuring File-Based Contexts](#configuring-file-based-contexts)
+7. [Managing Multiple File-Based Configurations](#managing-multiple-file-based-configurations)
+8. [Example Context File](#example-context-file)
+9. [Helpful Commands](#helpful-commands)
+
+---
+
+## Introduction
+
+This document provides an overview of the NATS CLI, covering installation, basic commands, managing streams, working with contexts, and more.
+
+---
 
 ## Installation
 
-To install the NATS CLI, download the appropriate binary for your operating system from the [NATS GitHub Releases](https://github.com/nats-io/natscli/releases) page. Extract the binary and place it in your system's PATH.
+To install the NATS CLI, follow the steps below:
 
-Alternatively, if you are on macOS, you can use Homebrew:
+1. Download the latest release from the [NATS CLI GitHub repository](https://github.com/nats-io/natscli).
+2. Extract the downloaded file.
+3. Add the extracted binary to your system's PATH.
 
-```sh
-brew install nats-io/nats-tools/nats
+---
+
+## Basic Commands
+
+### Connecting to a NATS Server
+```bash
+nats server run
 ```
 
-Verify the installation by running:
-
-```sh
-nats --version
+### Checking the Server Status
+```bash
+nats server info
 ```
 
-## Configuration
-
-### Adding Context
-
-Contexts are a way to manage different NATS environments. A context is a combination of NATS servers, credentials, and other connection settings.
-
-To add a new context:
-
-```sh
-nats context add <context_name> --server <nats_server_url> --user <username> --password <password>
+### Publishing a Message
+```bash
+nats pub <subject> <message>
 ```
 
-For example:
-
-```sh
-nats context add mycontext --server nats://localhost:4222 --user myuser --password mypass
+### Subscribing to a Subject
+```bash
+nats sub <subject>
 ```
 
-To list all contexts:
-
-```sh
-nats context ls
+### Request-Reply
+```bash
+nats req <subject> <message>
 ```
 
-To use a specific context:
+---
 
-```sh
-nats context select <context_name>
-```
-
-### Managing Multiple Connections
-
-You can manage multiple connections by creating multiple contexts and switching between them as needed.
-
-To add multiple contexts:
-
-```sh
-nats context add context1 --server nats://server1:4222 --user user1 --password pass1
-nats context add context2 --server nats://server2:4222 --user user2 --password pass2
-```
-
-Switch between contexts:
-
-```sh
-nats context select context1
-nats context select context2
-```
-
-## Stream Management
+## Managing Streams
 
 ### Creating a Stream
-
-To create a stream:
-
-```sh
-nats stream add <stream_name> --subjects <subject_name> --storage <file_or_memory> --retention <policy>
+```bash
+nats stream add <stream_name> --subjects <subject>
 ```
 
-Example:
-
-```sh
-nats stream add mystream --subjects "foo.>" --storage file --retention limits
-```
-
-### Viewing Stream Information
-
-To view information about a stream:
-
-```sh
-nats stream info <stream_name>
-```
-
-### Purging a Stream
-
-To purge a stream:
-
-```sh
-nats stream purge <stream_name>
-```
-
-To purge a stream but keep the stream configuration:
-
-```sh
-nats stream purge <stream_name> --keep
+### Listing Streams
+```bash
+nats stream ls
 ```
 
 ### Deleting a Stream
-
-To delete a stream:
-
-```sh
+```bash
 nats stream rm <stream_name>
 ```
 
-## Message Management
+### Purging a Stream
+```bash
+nats stream purge <stream_name>
+```
 
 ### Deleting a Specific Message
-
-To delete a specific message from a stream by sequence number:
-
-```sh
-nats stream delmsg <stream_name> --seq <sequence_number>
+```bash
+nats stream rm-msg <stream_name> --seq <sequence_number>
 ```
 
-Example:
+---
 
-```sh
-nats stream delmsg mystream --seq 10
+## Working with Contexts
+
+### Adding a Context
+```bash
+nats context add <context_name> --server <server_url>
 ```
 
-### Removing a Deleted Message
-
-After a message is deleted, you can compact the stream:
-
-```sh
-nats stream compact <stream_name>
+### Switching Contexts
+```bash
+nats context select <context_name>
 ```
+
+### Listing Contexts
+```bash
+nats context ls
+```
+
+### Removing a Context
+```bash
+nats context rm <context_name>
+```
+
+---
+
+## Configuring File-Based Contexts
+
+File-based contexts allow you to manage NATS configurations through a configuration file.
+
+### Example File-Based Context
+
+Create a file named `nats-context.conf`:
+
+```ini
+# NATS Context Configuration
+name = "production-context"
+description = "NATS context for the production environment"
+
+[nats]
+  url = "nats://localhost:4222"
+  username = "user"
+  password = "password"
+  token = "mysecrettoken"
+
+[jetstream]
+  account = "JSAccount"
+  domain = "my_domain"
+
+[tls]
+  cert_file = "/path/to/certificate.crt"
+  key_file = "/path/to/private.key"
+  ca_file = "/path/to/ca_certificate.crt"
+
+[auth]
+  creds = "/path/to/creds/file.creds"
+```
+
+### Loading a File-Based Context
+```bash
+nats context import <context_name> --file nats-context.conf
+```
+
+---
+
+## Managing Multiple File-Based Configurations
+
+### Adding Multiple Configurations
+
+You can manage multiple environments (e.g., production, development) by creating separate context files:
+
+1. `nats-prod.conf` for production.
+2. `nats-dev.conf` for development.
+
+### Switching Between Configurations
+
+Switch between configurations by loading the appropriate context file:
+
+```bash
+nats context import <context_name> --file <config_file>
+```
+
+### Example Usage
+```bash
+nats context import prod --file nats-prod.conf
+nats context import dev --file nats-dev.conf
+```
+
+---
 
 ## Helpful Commands
 
-- **List All Streams**:
-  ```sh
+- **Creating a Stream**:
+  ```bash
+  nats stream add <stream_name> --subjects <subject>
+  ```
+
+- **Listing Streams**:
+  ```bash
   nats stream ls
   ```
 
-- **List All Messages in a Stream**:
-  ```sh
-  nats stream view <stream_name>
-  ```
-
-- **List All Consumers**:
-  ```sh
-  nats consumer ls <stream_name>
-  ```
-
-- **Viewing a Specific Message**:
-  ```sh
-  nats stream get <stream_name> --seq <sequence_number>
-  ```
-
-- **Viewing Stream Configuration**:
-  ```sh
-  nats stream info <stream_name> --json
-  ```
-
-This documentation should cover the most common tasks you'll need to perform with NATS using the CLI. For more advanced features or updates, refer to the [official NATS documentation](https://docs.nats.io) or the [NATS CLI GitHub repository](https://github.com/nats-io/natscli).
-
-## Helpful Commands
-
-- **List All Streams**:
-  ```sh
-  nats stream ls
-  ```
-
-- **List All Messages in a Stream**:
-  ```sh
-  nats stream view <stream_name>
-  ```
-
-- **List All Consumers**:
-  ```sh
-  nats consumer ls <stream_name>
-  ```
-
-- **Viewing a Specific Message**:
-  ```sh
-  nats stream get <stream_name> --seq <sequence_number>
-  ```
-
-- **Viewing Stream Configuration**:
-  ```sh
-  nats stream info <stream_name> --json
-  ```
-
-- **List All Contexts**:
-  ```sh
-  nats context ls
-  ```
-
-- **Delete a Specific Context**:
-  ```sh
-  nats context rm <context_name>
-  ```
-
-- **Switch to a Different Context**:
-  ```sh
-  nats context select <context_name>
-  ```
-
-- **View Current Context Details**:
-  ```sh
-  nats context
-  ```
-
-- **Add a New Stream**:
-  ```sh
-  nats stream add <stream_name>
-  ```
-
-- **Update an Existing Stream**:
-  ```sh
-  nats stream update <stream_name>
-  ```
-
-- **Delete a Stream**:
-  ```sh
+- **Deleting a Stream**:
+  ```bash
   nats stream rm <stream_name>
   ```
 
-- **Purge a Stream**:
-  ```sh
+- **Purging a Stream**:
+  ```bash
   nats stream purge <stream_name>
   ```
 
-- **Compact a Stream**:
-  ```sh
-  nats stream compact <stream_name>
+- **Deleting a Specific Message**:
+  ```bash
+  nats stream rm-msg <stream_name> --seq <sequence_number>
   ```
 
-- **View a Specific Message by Sequence**:
-  ```sh
-  nats stream get <stream_name> --seq <sequence_number>
+- **Adding a Context**:
+  ```bash
+  nats context add <context_name> --server <server_url>
   ```
 
-- **Delete a Specific Message by Sequence**:
-  ```sh
-  nats stream delmsg <stream_name> --seq <sequence_number>
+- **Switching Contexts**:
+  ```bash
+  nats context select <context_name>
   ```
 
-- **List All Consumers for a Stream**:
-  ```sh
-  nats consumer ls <stream_name>
+- **Listing Contexts**:
+  ```bash
+  nats context ls
   ```
 
-- **View Details of a Consumer**:
-  ```sh
-  nats consumer info <stream_name> <consumer_name>
+- **Removing a Context**:
+  ```bash
+  nats context rm <context_name>
   ```
 
-- **Create a New Consumer**:
-  ```sh
-  nats consumer add <stream_name> <consumer_name>
+- **Loading a File-Based Context**:
+  ```bash
+  nats context import <context_name> --file nats-context.conf
   ```
 
-- **Delete a Consumer**:
-  ```sh
-  nats consumer rm <stream_name> <consumer_name>
-  ```
+---
 
-- **Pause a Consumer**:
-  ```sh
-  nats consumer pause <stream_name> <consumer_name>
-  ```
+## Example Context File
 
-- **Resume a Paused Consumer**:
-  ```sh
-  nats consumer resume <stream_name> <consumer_name>
-  ```
+### File Name: `nats-context.conf`
 
-- **Get the Last Message for a Subject**:
-  ```sh
-  nats stream last <stream_name> --subject <subject_name>
-  ```
+### Example Context File (`nats-context.conf`):
 
-- **Check JetStream Account Information**:
-  ```sh
-  nats account info
-  ```
+```ini
+# NATS Context Configuration
+name = "production-context"
+description = "NATS context for the production environment"
 
-- **Check Server Status**:
-  ```sh
-  nats server report jetstream
-  ```
+[nats]
+  url = "nats://localhost:4222"
+  username = "user"
+  password = "password"
+  token = "mysecrettoken"
 
-- **Monitor Server Connections**:
-  ```sh
-  nats server report connections
-  ```
+[jetstream]
+  account = "JSAccount"
+  domain = "my_domain"
 
-- **Monitor Stream Statistics**:
-  ```sh
-  nats server report stats
-  ```
+[tls]
+  cert_file = "/path/to/certificate.crt"
+  key_file = "/path/to/private.key"
+  ca_file = "/path/to/ca_certificate.crt"
+
+[auth]
+  creds = "/path/to/creds/file.creds"
+```
+
