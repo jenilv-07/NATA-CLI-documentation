@@ -315,5 +315,3 @@ This documentation should cover the most common tasks you'll need to perform wit
   ```sh
   nats server report stats
   ```
-
-These commands should help you manage NATS streams, contexts, and consumers effectively.
