@@ -26,7 +26,7 @@ This document provides an overview of the NATS CLI, covering installation, basic
 
 To install the NATS CLI, follow the steps below:
 
-1. Download the latest release from the [NATS CLI GitHub repository](https://github.com/nats-io/natscli).
+1. Download the latest release from the [NATS CLI GitHub repository](https://github.com/nats-io/natscli/releases).
 2. Extract the downloaded file.
 3. Add the extracted binary to your system's PATH.
 
