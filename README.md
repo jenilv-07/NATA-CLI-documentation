@@ -1,3 +1,6 @@
+![image](https://github.com/user-attachments/assets/9784082d-0c6f-4bfd-b18a-8d602c4b42ed)
+
+
 # NATS CLI Documentation
 
 ## Table of Contents
